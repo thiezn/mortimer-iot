@@ -9,7 +9,10 @@ int status = WL_IDLE_STATUS; // WiFi radio status
 // --- Server Configuration ---
 const char server[] = "pap.mortimer.nl";   // Target domain (DNS will resolve this)
 const char resource[] = "/api/v1/weather"; // API endpoint path
-const int port = 443;                      // Public HTTPS port
+const char ssid[] = "FRITZ!Box 7490";
+const char pass[] = "06114872644865906045";
+const char apiKey[] = "qwerty";
+const int port = 443; // Public HTTPS port
 
 // Instantiate the secure WiFi client
 WiFiSSLClient sslClient;

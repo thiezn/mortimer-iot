@@ -43,7 +43,7 @@ impl ApiClient {
     }
 
     pub async fn post_weather(&self, payload: &WeatherMeasurement) -> Result<WeatherReading> {
-        self.post_json("/iot/weather", payload).await
+        self.post_json("/api/v1/weather", payload).await
     }
 
     pub async fn list_weather_data(

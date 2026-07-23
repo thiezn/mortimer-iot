@@ -47,7 +47,7 @@ pub async fn run(db: DbClient, listener_ip: String, port: u16, ingest_api_key: S
         .route("/healthcheck", get(healthcheck))
         .route("/api/v1/weather", get(list_weather_data))
         .route("/api/v1/weather/latest", get(latest_weather_data))
-        .route("/iot/weather", post(ingest_weather_data))
+        .route("/api/v1/weather", post(ingest_weather_data))
         .fallback(non_existing_route_handler)
         .layer(DefaultBodyLimit::max(1024))
         .layer(middleware::from_fn(log_incoming_request))

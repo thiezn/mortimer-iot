@@ -84,7 +84,7 @@ This repository includes scripts and config files for running:
 
 - Rust backend (`mortimeriot`) as a `systemd` service.
 - Svelte frontend as static files served by Apache.
-- Apache reverse proxy for `/api` and `/iot` to `127.0.0.1:2111`.
+- Apache reverse proxy for `/api` to `127.0.0.1:2111`.
 - Hourly pull/build/deploy through cron.
 
 ### Runtime layout on VPS
