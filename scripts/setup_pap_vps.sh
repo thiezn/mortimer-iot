@@ -71,7 +71,6 @@ install_packages() {
         git \
         libssl-dev \
         nodejs \
-        npm \
         pkg-config \
         rsync \
         sqlite3
