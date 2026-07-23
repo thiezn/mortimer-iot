@@ -110,6 +110,16 @@ build_artifacts() {
 
     log "Building Svelte frontend"
     cd "$REPO_DIR/frontend"
+
+    # 1. Clear out any poison state or locked files
+    rm -rf node_modules package-lock.json
+    
+    # 2. Force the correct CLI endpoint inside the build shell context
+    npm config set registry https://registry.npmjs.org/
+    
+    # 3. Explicitly target the API endpoint during installation
+    npm install --registry=https://registry.npmjs.org/
+    
     npm ci
     npm run build
 }
