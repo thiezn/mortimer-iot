@@ -1,0 +1,18 @@
+[Unit]
+Description=KOReader Sync Server
+After=syslog.target
+After=network.target
+After=postgresql.service
+
+[Service]
+RestartSec=2s
+Type=simple
+User=myuser
+Group=users
+WorkingDirectory=/home/myuser
+ExecStart=/usr/local/bin/kosyncrs
+Environment=PG_URL=postgresql://kosync:password@localhost/kosync PORT=3003
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

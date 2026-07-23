@@ -1,0 +1,20 @@
+[package]
+name = "mortimeriot-client"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "mortimeriot-client"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+mortimeriot-core = { path = "../mortimeriot-core" }
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
