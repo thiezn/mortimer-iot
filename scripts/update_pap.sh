@@ -1,50 +1,89 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Script to pull and refresh pap.mortimer.nl
+# Pull, build, and deploy the Mortimer IoT backend + frontend.
+set -euo pipefail
 
-# Exit on error
-set -e
+export PATH="/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# Variables
+if [ -f "/root/.cargo/env" ]; then
+    # Ensure cron has the rustup-managed cargo/rustc in PATH.
+    source "/root/.cargo/env"
+fi
+
 REPO_DIR="/root/pap.mortimer.nl"
-DEPLOY_DIR="/var/www/pap.mortimer.nl"
-SRC_DOC_DIR="$DEPLOY_DIR/src"
-REPO_URL="git@github.com:thiezn/mortimeriot.git"
+REPO_URL="git@github.com:thiezn/mortimer-iot.git"
+DEPLOY_ROOT="/var/www/pap.mortimer.nl"
+FRONTEND_DIR="$DEPLOY_ROOT/current"
+BIN_DIR="$DEPLOY_ROOT/bin"
+RUNTIME_DIR="$DEPLOY_ROOT/runtime"
+TMP_DIR="$DEPLOY_ROOT/tmp"
+SERVICE_NAME="mortimeriot"
 
-# Clone or pull latest changes. We first stash any possible local changes
-echo "Pulling latest changes from repo"
-if [ -d "$REPO_DIR" ]; then
+log() {
+    printf '[%s] %s\n' "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$*"
+}
+
+require_command() {
+    local cmd="$1"
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        log "ERROR: required command '$cmd' is not installed"
+        exit 1
+    fi
+}
+
+log "Checking required build tools"
+require_command git
+require_command cargo
+require_command npm
+require_command rsync
+
+log "Preparing filesystem layout"
+mkdir -p "$DEPLOY_ROOT" "$FRONTEND_DIR" "$BIN_DIR" "$RUNTIME_DIR" "$TMP_DIR"
+
+if [ -d "$REPO_DIR/.git" ]; then
+    log "Updating existing repository checkout at $REPO_DIR"
     cd "$REPO_DIR"
-    git add -A .
-    git stash
-    git pull origin main
+    git fetch --prune origin
+    if ! git pull --ff-only origin main; then
+        log "ERROR: git pull failed (non fast-forward or local changes). Resolve repo state at $REPO_DIR and retry."
+        exit 1
+    fi
 else
+    log "Cloning repository to $REPO_DIR"
     git clone "$REPO_URL" "$REPO_DIR"
     cd "$REPO_DIR"
 fi
 
-# Deploy site to web folder
-echo "Replace web folder"
-rm -rf "$DEPLOY_DIR"/*
-cp -r * "$DEPLOY_DIR"
-rm -rf "$DEPLOY_DIR"/.git
+log "Building Rust backend"
+cargo build --release -p mortimeriot
 
-# Dump rust code base to llms.txt
-echo "Create single llms.txt file"
+log "Building Svelte frontend"
+cd "$REPO_DIR/frontend"
+npm ci
+npm run build
 
-LLM_FILE="$DEPLOY_DIR/llms.txt"
+log "Deploying frontend assets"
+rsync -a --delete "$REPO_DIR/frontend/dist/" "$FRONTEND_DIR/"
 
+log "Deploying backend binary"
+tmp_bin="$TMP_DIR/mortimeriot.$$.new"
+install -m 0755 "$REPO_DIR/target/release/mortimeriot" "$tmp_bin"
+mv -f "$tmp_bin" "$BIN_DIR/mortimeriot"
 
-echo "pap.mortimer.nl website!! " > $LLM_FILE
+log "Applying runtime permissions"
+chown -R www-data:www-data "$DEPLOY_ROOT"
 
-# Set ownership
-chown -R www-data:www-data "$DEPLOY_DIR"
+if systemctl is-enabled "$SERVICE_NAME" >/dev/null 2>&1; then
+    log "Restarting systemd service: $SERVICE_NAME"
+    systemctl restart "$SERVICE_NAME"
+else
+    log "Service $SERVICE_NAME is not enabled yet; skipping restart"
+fi
 
-# Restart Apache
-echo "Restarting Apache"
-/usr/sbin/service apache2 restart
+if systemctl is-enabled apache2 >/dev/null 2>&1; then
+    log "Reloading Apache"
+    systemctl reload apache2
+fi
 
-# Notify Bing about the new sitemap (Google ping is deprecated)
-# echo "Notifying Bing about sitemap update..."
-# curl -s "https://www.bing.com/ping?sitemap=$SITE_ROOT/sitemap.xml" || echo "Bing ping failed"
+log "Deployment complete"
 

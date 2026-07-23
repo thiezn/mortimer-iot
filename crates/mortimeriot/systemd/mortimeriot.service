@@ -1,0 +1,21 @@
+[Unit]
+Description=Mortimer IoT Rust Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/pap.mortimer.nl
+EnvironmentFile=/etc/mortimeriot/mortimeriot.env
+ExecStart=/var/www/pap.mortimer.nl/bin/mortimeriot start --config /var/www/pap.mortimer.nl/runtime/mortimeriot.toml
+Restart=always
+RestartSec=2s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
