@@ -119,7 +119,7 @@ build_artifacts() {
     
     # 3. Explicitly target the API endpoint during installation
     npm install --registry=https://registry.npmjs.org/
-    
+
     npm ci
     npm run build
 }
@@ -213,8 +213,8 @@ enable_services() {
         a2dissite 000-default.conf || true
     fi
 
-    if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-        log "ERROR: SSL certificate for $DOMAIN not found at /etc/letsencrypt/live/$DOMAIN"
+    if [ ! -f "/etc/letsencrypt/live/mortimer.nl/fullchain.pem" ]; then
+        log "ERROR: SSL certificate for $DOMAIN not found at /etc/letsencrypt/live/mortimer.nl"
         log "Install/renew certificates before enabling this site, then rerun this script"
         exit 1
     fi

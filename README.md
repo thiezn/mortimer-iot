@@ -179,6 +179,6 @@ curl -fsS https://pap.mortimer.nl/api/v1/health
 - The `systemd` service runs as `www-data:www-data`.
 - The backend binds to `127.0.0.1:2111` by default in deployed config.
 - SSL certificate paths in Apache config expect Let's Encrypt files at:
-  - `/etc/letsencrypt/live/pap.mortimer.nl/fullchain.pem`
-  - `/etc/letsencrypt/live/pap.mortimer.nl/privkey.pem`
+  - `/etc/letsencrypt/live/mortimer.nl/fullchain.pem`
+  - `/etc/letsencrypt/live/mortimer.nl/privkey.pem`
 - If `git pull --ff-only` fails in `/root/pap.mortimer.nl`, resolve repository state and rerun the update script.
