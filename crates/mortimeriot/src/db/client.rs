@@ -54,15 +54,8 @@ impl DbClient {
             .duration_since(UNIX_EPOCH)
             .map_err(|_| Error::InvalidTimestamp)?;
         let recorded_at_ms = i64::try_from(now.as_millis()).map_err(|_| Error::InvalidTimestamp)?;
+        debug!(payload = ?data, recorded_at_ms = recorded_at_ms, "received weather measurement");
 
-        debug!(
-            query = "INSERT INTO weather_measurements (temperature_c, humidity_percent, wind_speed, recorded_at_ms) VALUES (?, ?, ?)",
-            temperature = data.temperature,
-            humidity = data.humidity,
-            wind_speed = data.wind_speed,
-            recorded_at_ms,
-            "storing weather measurement"
-        );
         let row = sqlx::query(
             "INSERT INTO weather_measurements (temperature_c, humidity_percent, wind_speed, recorded_at_ms)
              VALUES (?, ?, ?, ?)
