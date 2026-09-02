@@ -283,8 +283,6 @@
         </svg>
       {/if}
     </article>
-  </section>
-
 
     <article class="chart-card">
       <div class="chart-header">
@@ -309,7 +307,6 @@
       {/if}
     </article>
   </section>
-
 
   <section class="table-card">
     <div class="chart-header">
