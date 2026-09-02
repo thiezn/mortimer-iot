@@ -9,6 +9,7 @@ pub const MAX_HUMIDITY_PERCENT: f64 = 100.0;
 pub struct WeatherMeasurement {
     pub temperature: f64,
     pub humidity: f64,
+    pub wind_speed: f64,
 }
 
 impl WeatherMeasurement {
@@ -28,6 +29,7 @@ pub struct WeatherReading {
     pub id: i64,
     pub temperature: f64,
     pub humidity: f64,
+    pub wind_speed: f64,
     pub recorded_at: String,
 }
 
@@ -59,6 +61,7 @@ mod tests {
         let reading = WeatherMeasurement {
             temperature: MIN_TEMPERATURE_C,
             humidity: MAX_HUMIDITY_PERCENT,
+            wind_speed: 0.0,
         };
 
         assert!(reading.validate().is_ok());
@@ -69,6 +72,7 @@ mod tests {
         let reading = WeatherMeasurement {
             temperature: MAX_TEMPERATURE_C + 0.1,
             humidity: 50.0,
+            wind_speed: 0.0,
         };
 
         assert!(reading.validate().is_err());
@@ -79,6 +83,7 @@ mod tests {
         let reading = WeatherMeasurement {
             temperature: 20.0,
             humidity: MIN_HUMIDITY_PERCENT - 1.0,
+            wind_speed: 0.0,
         };
 
         assert!(reading.validate().is_err());
@@ -86,11 +91,12 @@ mod tests {
 
     #[test]
     fn deserializes_arduino_payload_shape() {
-        let input = r#"{"temperature":21.25,"humidity":48.5}"#;
+        let input = r#"{"temperature":21.25,"humidity":48.5,"wind_speed":5.0}"#;
         let measurement: WeatherMeasurement = serde_json::from_str(input).expect("valid payload");
 
         assert_eq!(measurement.temperature, 21.25);
         assert_eq!(measurement.humidity, 48.5);
+        assert_eq!(measurement.wind_speed, 5.0);
     }
 
     #[test]
@@ -100,6 +106,7 @@ mod tests {
                 id: 10,
                 temperature: 20.1,
                 humidity: 45.4,
+                wind_speed: 12.3,
                 recorded_at: "2026-07-21T12:00:00Z".to_owned(),
             }],
             next_cursor: Some(9),

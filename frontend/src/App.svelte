@@ -1,137 +1,146 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount } from "svelte";
 
   import {
     fetchDashboardData,
     type RangePreset,
     type WeatherReading,
-  } from './lib/api'
+  } from "./lib/api";
 
-  const ranges: RangePreset[] = ['24h', '7d', '30d', 'all']
-  const POLL_INTERVAL_MS = 15_000
+  const ranges: RangePreset[] = ["24h", "7d", "30d", "all"];
+  const POLL_INTERVAL_MS = 15_000;
 
-  let selectedRange: RangePreset = '24h'
-  let readings: WeatherReading[] = []
-  let latest: WeatherReading | null = null
-  let healthState = 'UNKNOWN'
-  let loading = true
-  let refreshing = false
-  let errorMessage = ''
-  let lastUpdatedAt: Date | null = null
+  let selectedRange: RangePreset = "24h";
+  let readings: WeatherReading[] = [];
+  let latest: WeatherReading | null = null;
+  let healthState = "UNKNOWN";
+  let loading = true;
+  let refreshing = false;
+  let errorMessage = "";
+  let lastUpdatedAt: Date | null = null;
 
-  let intervalId: ReturnType<typeof setInterval> | null = null
-  let activeController: AbortController | null = null
+  let intervalId: ReturnType<typeof setInterval> | null = null;
+  let activeController: AbortController | null = null;
 
   function formatTimestamp(value: string): string {
     return new Intl.DateTimeFormat(undefined, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(value))
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(value));
   }
 
   function formatNumber(value: number, suffix: string): string {
-    return `${value.toFixed(1)}${suffix}`
+    return `${value.toFixed(1)}${suffix}`;
   }
 
   function createPath(values: number[]): string {
     if (values.length === 0) {
-      return ''
+      return "";
     }
 
-    const width = 100
-    const height = 100
-    const min = Math.min(...values)
-    const max = Math.max(...values)
-    const span = Math.max(max - min, 0.1)
+    const width = 100;
+    const height = 100;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = Math.max(max - min, 0.1);
 
     return values
       .map((value, index) => {
-        const x = values.length === 1 ? width / 2 : (index / (values.length - 1)) * width
-        const y = height - ((value - min) / span) * height
-        return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
+        const x =
+          values.length === 1
+            ? width / 2
+            : (index / (values.length - 1)) * width;
+        const y = height - ((value - min) / span) * height;
+        return `${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
       })
-      .join(' ')
+      .join(" ");
   }
 
-  function chartValues(key: 'temperature' | 'humidity'): number[] {
-    return [...readings].reverse().map((reading) => reading[key])
+  function chartValues(
+    key: "temperature" | "humidity" | "wind_speed",
+  ): number[] {
+    return [...readings].reverse().map((reading) => reading[key]);
   }
 
-  async function loadDashboard(range = selectedRange, initial = false): Promise<void> {
-    activeController?.abort()
-    const controller = new AbortController()
-    activeController = controller
+  async function loadDashboard(
+    range = selectedRange,
+    initial = false,
+  ): Promise<void> {
+    activeController?.abort();
+    const controller = new AbortController();
+    activeController = controller;
 
     if (initial) {
-      loading = true
+      loading = true;
     } else {
-      refreshing = true
+      refreshing = true;
     }
 
-    errorMessage = ''
+    errorMessage = "";
 
     try {
-      const data = await fetchDashboardData(range, controller.signal)
+      const data = await fetchDashboardData(range, controller.signal);
       if (controller.signal.aborted) {
-        return
+        return;
       }
 
-      selectedRange = range
-      healthState = data.health.state
-      latest = data.latest.item
-      readings = data.history.items
-      lastUpdatedAt = new Date()
+      selectedRange = range;
+      healthState = data.health.state;
+      latest = data.latest.item;
+      readings = data.history.items;
+      lastUpdatedAt = new Date();
     } catch (error) {
       if (controller.signal.aborted) {
-        return
+        return;
       }
 
-      errorMessage = error instanceof Error ? error.message : 'Unknown dashboard error'
+      errorMessage =
+        error instanceof Error ? error.message : "Unknown dashboard error";
     } finally {
       if (activeController === controller) {
-        activeController = null
+        activeController = null;
       }
-      loading = false
-      refreshing = false
+      loading = false;
+      refreshing = false;
     }
   }
 
   function startPolling(): void {
-    stopPolling()
+    stopPolling();
     intervalId = setInterval(() => {
-      if (document.visibilityState === 'visible' && !refreshing) {
-        void loadDashboard(selectedRange)
+      if (document.visibilityState === "visible" && !refreshing) {
+        void loadDashboard(selectedRange);
       }
-    }, POLL_INTERVAL_MS)
+    }, POLL_INTERVAL_MS);
   }
 
   function stopPolling(): void {
     if (intervalId) {
-      clearInterval(intervalId)
-      intervalId = null
+      clearInterval(intervalId);
+      intervalId = null;
     }
   }
 
   function handleVisibilityChange(): void {
-    if (document.visibilityState === 'visible') {
-      void loadDashboard(selectedRange)
-      startPolling()
+    if (document.visibilityState === "visible") {
+      void loadDashboard(selectedRange);
+      startPolling();
     } else {
-      stopPolling()
+      stopPolling();
     }
   }
 
   onMount(() => {
-    void loadDashboard(selectedRange, true)
-    startPolling()
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    void loadDashboard(selectedRange, true);
+    startPolling();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      activeController?.abort()
-      stopPolling()
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  })
+      activeController?.abort();
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  });
 </script>
 
 <svelte:head>
@@ -148,14 +157,18 @@
       <p class="eyebrow">Mortimer IoT</p>
       <h1>Weather station telemetry</h1>
       <p class="hero-copy">
-        Live temperature and humidity readings ingested by the Rust API and stored in SQLite.
+        Live temperature, humidity and wind speed readings
       </p>
     </div>
 
-    <div class="status-card" data-ok={healthState === 'OK'}>
+    <div class="status-card" data-ok={healthState === "OK"}>
       <span class="status-label">Service status</span>
       <strong>{healthState}</strong>
-      <span>{lastUpdatedAt ? `Updated ${lastUpdatedAt.toLocaleTimeString()}` : 'Waiting for first refresh'}</span>
+      <span
+        >{lastUpdatedAt
+          ? `Updated ${lastUpdatedAt.toLocaleTimeString()}`
+          : "Waiting for first refresh"}</span
+      >
     </div>
   </section>
 
@@ -172,8 +185,12 @@
       {/each}
     </div>
 
-    <button class="refresh-button" type="button" on:click={() => void loadDashboard(selectedRange)}>
-      {refreshing ? 'Refreshing…' : 'Refresh now'}
+    <button
+      class="refresh-button"
+      type="button"
+      on:click={() => void loadDashboard(selectedRange)}
+    >
+      {refreshing ? "Refreshing…" : "Refresh now"}
     </button>
   </section>
 
@@ -187,14 +204,36 @@
   <section class="metric-grid">
     <article class="metric-card accent-red">
       <span>Latest temperature</span>
-      <strong>{latest ? formatNumber(latest.temperature, '°C') : 'No data'}</strong>
-      <small>{latest ? formatTimestamp(latest.recorded_at) : 'Waiting for first reading'}</small>
+      <strong
+        >{latest ? formatNumber(latest.temperature, "°C") : "No data"}</strong
+      >
+      <small
+        >{latest
+          ? formatTimestamp(latest.recorded_at)
+          : "Waiting for first reading"}</small
+      >
     </article>
 
     <article class="metric-card accent-blue">
       <span>Latest humidity</span>
-      <strong>{latest ? formatNumber(latest.humidity, '%') : 'No data'}</strong>
-      <small>{latest ? formatTimestamp(latest.recorded_at) : 'Waiting for first reading'}</small>
+      <strong>{latest ? formatNumber(latest.humidity, "%") : "No data"}</strong>
+      <small
+        >{latest
+          ? formatTimestamp(latest.recorded_at)
+          : "Waiting for first reading"}</small
+      >
+    </article>
+
+    <article class="metric-card accent-green">
+      <span>Latest wind speed</span>
+      <strong
+        >{latest ? formatNumber(latest.wind_speed, " m/s") : "No data"}</strong
+      >
+      <small
+        >{latest
+          ? formatTimestamp(latest.recorded_at)
+          : "Waiting for first reading"}</small
+      >
     </article>
   </section>
 
@@ -208,10 +247,16 @@
       {#if loading}
         <div class="chart-placeholder">Loading temperature history…</div>
       {:else if readings.length === 0}
-        <div class="chart-placeholder">No temperature readings in the selected range.</div>
+        <div class="chart-placeholder">
+          No temperature readings in the selected range.
+        </div>
       {:else}
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Temperature chart">
-          <path d={createPath(chartValues('temperature'))} />
+        <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-label="Temperature chart"
+        >
+          <path d={createPath(chartValues("temperature"))} />
         </svg>
       {/if}
     </article>
@@ -225,10 +270,16 @@
       {#if loading}
         <div class="chart-placeholder">Loading humidity history…</div>
       {:else if readings.length === 0}
-        <div class="chart-placeholder">No humidity readings in the selected range.</div>
+        <div class="chart-placeholder">
+          No humidity readings in the selected range.
+        </div>
       {:else}
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Humidity chart">
-          <path d={createPath(chartValues('humidity'))} />
+        <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-label="Humidity chart"
+        >
+          <path d={createPath(chartValues("humidity"))} />
         </svg>
       {/if}
     </article>
@@ -237,7 +288,9 @@
   <section class="table-card">
     <div class="chart-header">
       <h2>Recent readings</h2>
-      <span>{readings.length === 0 ? 'Empty' : `${readings.length} loaded`}</span>
+      <span
+        >{readings.length === 0 ? "Empty" : `${readings.length} loaded`}</span
+      >
     </div>
 
     {#if loading}
@@ -253,6 +306,7 @@
               <th>Recorded at</th>
               <th>Temperature</th>
               <th>Humidity</th>
+              <th>Wind speed</th>
             </tr>
           </thead>
           <tbody>
@@ -260,8 +314,9 @@
               <tr>
                 <td>{reading.id}</td>
                 <td>{formatTimestamp(reading.recorded_at)}</td>
-                <td>{formatNumber(reading.temperature, '°C')}</td>
-                <td>{formatNumber(reading.humidity, '%')}</td>
+                <td>{formatNumber(reading.temperature, "°C")}</td>
+                <td>{formatNumber(reading.humidity, "%")}</td>
+                <td>{formatNumber(reading.wind_speed, " m/s")}</td>
               </tr>
             {/each}
           </tbody>

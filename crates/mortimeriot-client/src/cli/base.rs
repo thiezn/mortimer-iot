@@ -38,6 +38,8 @@ pub struct WeatherSendArgs {
     pub temperature: f64,
     #[arg(long)]
     pub humidity: f64,
+    #[arg(long)]
+    pub wind_speed: f64,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -94,6 +96,7 @@ pub async fn run() -> Result {
                 let payload = WeatherMeasurement {
                     temperature: args.temperature,
                     humidity: args.humidity,
+                    wind_speed: args.wind_speed,
                 };
                 payload
                     .validate()

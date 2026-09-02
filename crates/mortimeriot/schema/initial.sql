@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS weather_measurements (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	temperature_c REAL NOT NULL,
 	humidity_percent REAL NOT NULL,
+	wind_speed REAL NOT NULL,
 	recorded_at_ms INTEGER NOT NULL
 );
 

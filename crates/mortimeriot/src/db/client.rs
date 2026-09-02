@@ -148,6 +148,7 @@ impl DbClient {
             id: row.try_get("id")?,
             temperature: row.try_get("temperature_c")?,
             humidity: row.try_get("humidity_percent")?,
+            wind_speed: 0.0,
             recorded_at,
         })
     }
@@ -182,6 +183,7 @@ mod tests {
             .store_weather_data(&WeatherMeasurement {
                 temperature: 21.5,
                 humidity: 47.25,
+                wind_speed: 0.0,
             })
             .await
             .expect("measurement stored");
@@ -212,6 +214,7 @@ mod tests {
             .store_weather_data(&WeatherMeasurement {
                 temperature: 18.0,
                 humidity: 40.0,
+                wind_speed: 0.0,
             })
             .await
             .expect("first insert succeeds");
@@ -219,6 +222,7 @@ mod tests {
             .store_weather_data(&WeatherMeasurement {
                 temperature: 19.0,
                 humidity: 41.0,
+                wind_speed: 0.0,
             })
             .await
             .expect("second insert succeeds");
