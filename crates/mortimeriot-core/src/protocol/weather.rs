@@ -20,6 +20,9 @@ impl WeatherMeasurement {
         if self.humidity < MIN_HUMIDITY_PERCENT || self.humidity > MAX_HUMIDITY_PERCENT {
             return Err("humidity is out of supported sensor range");
         }
+        if self.wind_speed < 0.0 {
+            return Err("wind speed cannot be negative");
+        }
         Ok(())
     }
 }

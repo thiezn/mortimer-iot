@@ -56,19 +56,21 @@ impl DbClient {
         let recorded_at_ms = i64::try_from(now.as_millis()).map_err(|_| Error::InvalidTimestamp)?;
 
         debug!(
-            query = "INSERT INTO weather_measurements (temperature_c, humidity_percent, recorded_at_ms) VALUES (?, ?, ?)",
+            query = "INSERT INTO weather_measurements (temperature_c, humidity_percent, wind_speed, recorded_at_ms) VALUES (?, ?, ?)",
             temperature = data.temperature,
             humidity = data.humidity,
+            wind_speed = data.wind_speed,
             recorded_at_ms,
             "storing weather measurement"
         );
         let row = sqlx::query(
-            "INSERT INTO weather_measurements (temperature_c, humidity_percent, recorded_at_ms)
-             VALUES (?, ?, ?)
-             RETURNING id, temperature_c, humidity_percent, recorded_at_ms",
+            "INSERT INTO weather_measurements (temperature_c, humidity_percent, wind_speed, recorded_at_ms)
+             VALUES (?, ?, ?, ?)
+             RETURNING id, temperature_c, humidity_percent, wind_speed, recorded_at_ms",
         )
         .bind(data.temperature)
         .bind(data.humidity)
+        .bind(data.wind_speed)
         .bind(recorded_at_ms)
         .fetch_one(&self.pool)
         .await?;
@@ -85,7 +87,7 @@ impl DbClient {
     ) -> Result<(Vec<WeatherReading>, Option<i64>)> {
         let fetch_limit = limit.saturating_add(1);
         let mut qb = QueryBuilder::<Sqlite>::new(
-            "SELECT id, temperature_c, humidity_percent, recorded_at_ms FROM weather_measurements WHERE 1=1",
+            "SELECT id, temperature_c, humidity_percent, wind_speed, recorded_at_ms FROM weather_measurements WHERE 1=1",
         );
 
         if let Some(from_ms) = from_ms {
@@ -119,7 +121,7 @@ impl DbClient {
 
     pub async fn latest_weather_data(&self) -> Result<Option<WeatherReading>> {
         let row = sqlx::query(
-            "SELECT id, temperature_c, humidity_percent, recorded_at_ms
+            "SELECT id, temperature_c, humidity_percent, wind_speed, recorded_at_ms
              FROM weather_measurements
              ORDER BY id DESC
              LIMIT 1",
@@ -148,7 +150,7 @@ impl DbClient {
             id: row.try_get("id")?,
             temperature: row.try_get("temperature_c")?,
             humidity: row.try_get("humidity_percent")?,
-            wind_speed: 0.0,
+            wind_speed: row.try_get("wind_speed")?,
             recorded_at,
         })
     }
