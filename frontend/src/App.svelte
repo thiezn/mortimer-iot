@@ -285,6 +285,32 @@
     </article>
   </section>
 
+
+    <article class="chart-card">
+      <div class="chart-header">
+        <h2>Wind speed trend</h2>
+        <span>{readings.length} points</span>
+      </div>
+
+      {#if loading}
+        <div class="chart-placeholder">Loading wind speed history…</div>
+      {:else if readings.length === 0}
+        <div class="chart-placeholder">
+          No wind speed readings in the selected range.
+        </div>
+      {:else}
+        <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-label="Wind speed chart"
+        >
+          <path d={createPath(chartValues("wind_speed"))} />
+        </svg>
+      {/if}
+    </article>
+  </section>
+
+
   <section class="table-card">
     <div class="chart-header">
       <h2>Recent readings</h2>
