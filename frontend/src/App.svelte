@@ -227,7 +227,7 @@
     <article class="metric-card accent-green">
       <span>Latest wind speed</span>
       <strong
-        >{latest ? formatNumber(latest.wind_speed, " m/s") : "No data"}</strong
+        >{latest ? formatNumber(latest.wind_speed, " km/h") : "No data"}</strong
       >
       <small
         >{latest
@@ -316,7 +316,7 @@
                 <td>{formatTimestamp(reading.recorded_at)}</td>
                 <td>{formatNumber(reading.temperature, "°C")}</td>
                 <td>{formatNumber(reading.humidity, "%")}</td>
-                <td>{formatNumber(reading.wind_speed, " m/s")}</td>
+                <td>{formatNumber(reading.wind_speed, " km/h")}</td>
               </tr>
             {/each}
           </tbody>
